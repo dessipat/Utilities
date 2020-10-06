@@ -1,5 +1,5 @@
 
-# require(UReported)
+ require(UReported)
 
   ##
   ## Under reported INAR with poisson inn.
