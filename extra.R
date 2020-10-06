@@ -1,5 +1,6 @@
 
- require(UReported)
+require(UReported)
+require(lattice)
 
   ##
   ## Under reported INAR with poisson inn.
