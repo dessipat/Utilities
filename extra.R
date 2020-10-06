@@ -1,4 +1,6 @@
 
+require(UReported)
+
   ##
   ## Under reported INAR with poisson inn.
   ## data generator
@@ -145,70 +147,33 @@ require(COMPoissonReg)
 require(hermite)
 
   ##
-  ## INAR with pois, zip, nb, geom, good innovations
-  ##
-
-ri <- function(n, param, dist){
-  alpha <- param[1]
-  Y <- NULL
-  if(dist=="pois"){
-    lambda <- param[2]
-    Y[1] <- rpois(1, lambda)
-    for (i in 2:n) {
-      Y[i] <- rbinom(n=1, size=Y[i-1], prob=alpha)+rpois(1, lambda)
-    }
-  }else if(dist=="zip") {
-    lambda <- param[2]
-    rho <- param[3]
-    Y[1] <- zip(n=1, lambda, rho)
-    for (i in 2:n) {
-      Y[i] <- rbinom(n=1, size=Y[i-1], prob=alpha)+zip(n=1, lambda, rho)
-    }
-  }else if(dist=="nb"){
-    prob <- param[2]
-    size <- param[3]
-    Y[1] <- rnbinom(n=1, size=size, prob=prob)
-    for (i in 2:n) {
-      Y[i] <- rbinom(n=1, size=Y[i-1], prob=alpha) + rnbinom(n=1, size=size, prob=prob)
-    }
-  }else if(dist=="geom"){
-    prob <- param[2]
-    Y[1] <- rgeom(n=1, prob=prob)
-    for (i in 2:n) {
-      Y[i] <- rbinom(n=1, size=Y[i-1], prob=alpha) + rgeom(n=1, prob=prob)
-    }
-  }else if(dist=="good"){
-    q <- param[2]
-    v <- param[3]
-    Y[1] <- rgood(n=1, q1=q, nu=v)
-    for (i in 2:n) {
-      Y[i] <- rbinom(n=1, size=Y[i-1], prob=alpha) + rgood(n=1, q1=q, nu=v)
-    }
-  }else if(dist=="genp"){
-    lambda <- param[2]
-    theta <- param[3]
-    Y[1] <- rgenp(n=1, lambda = lambda, theta = theta)
-    for (i in 2:n) {
-      Y[i] <- rbinom(n=1, size=Y[i-1], prob=alpha) + rgenp(n=1, lambda = lambda, theta = theta)
-    }
-  }else if(dist=="cmp"){
-    lambda <- param[2]
-    v <- param[3]
-    Y[1] <- rcmp(n=1, lambda = lambda, nu = v)
-    for (i in 2:n) {
-      Y[i] <- rbinom(n=1, size=Y[i-1], prob=alpha) + rcmp(n=1, lambda = lambda, nu = v)
-    }
-  }
-  Y
-}
-
-
-  ##
   ## INAR(p) series generator
   ##
 
-rip <- function(n, alpha, param, dist, Y=NULL){
+binthin <- function(x, alpha){
+  k <- length(x)
   p <- length(alpha)
+  if(!k>p) return( sum(rbinom(n=k, size=x, prob=alpha[1:k])) )
+  return( sum(rbinom(n=p, size=x[k:(k-p)], prob=alpha)) )
+}
+
+rinn <- function(par, dist){
+  if(dist=="pois"){ rpois(1, par)
+  }else if(dist=="zip"){ zip(n=1, par[1], par[2])
+  }else if(dist=="nb"){ nbinom(n=1, par[1], par[2])
+  }else if(dist=="geom"){ rgeom(n=1, par)
+  }else if(dist=="good"){ rgood(n=1, par[1], par[2])
+  }else if(dist=="genp"){ rgenp(n=1, par[1], par[2])
+  }else if(dist=="cmp"){ rcmp(n=1, par[1], par[2])
+  }else if(dist=="herm"){ rhermite(n=1, par[1], par[2], par[3])
+  }
+}
+
+rip <- function(n, alpha, par, dist){
+  Y <- NULL
+  Y[1] <- rinn(par, dist)
+  for (i in 2:n) Y[i] <- binthin(Y,alpha) + rinn(par, dist)
+  return(Y)
 }
 
   ##
@@ -223,7 +188,7 @@ resplot <- function(res){
          cex=0.6, box.lty=0, inset = -0.01, bg="transparent", col = 3)
   legend("topright",legend=c(paste("p.value =", round(shapiro.test(res)$p,3))),
          cex=0.6, box.lty=0, inset = 0.01, bg="transparent", col = 3)
-  par(fig=c(0.65,1,0,1),new=TRUE)
+  par(fig=c(0.70 ,1,0,1),new=TRUE)
   boxplot(res, axes=FALSE)
   par(fig=c(0,1,0,1))
 }
@@ -234,7 +199,7 @@ resplot <- function(res){
 cls <- function(x, param){
   n <- length(x)
   p <- length(param)-1
-
+  
   l <- param[p+1]
   a <- param[1:p]
   q <- NULL
