@@ -1,5 +1,5 @@
 
-require(UReported)
+# require(UReported)
 
   ##
   ## Under reported INAR with poisson inn.
@@ -48,9 +48,8 @@ zip <- function(n=1, lambda, rho){
   ## GOOD DISTRIBUTION pmf
   ##
 
-require(VGAM)
-
-dlerch <- function(x, q, nu, a)  (q^x)*(x+a)^(-nu)/lerch(q, nu, a)
+#require(VGAM)
+#dlerch <- function(x, q, nu, a)  (q^x)*(x+a)^(-nu)/lerch(q, nu, a)
 
 plerch <- function(q, q1, nu, a, lower.tail=TRUE)
 {
