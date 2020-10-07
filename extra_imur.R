@@ -1,4 +1,6 @@
 
+require(UReported)
+
 ##
 ## Under reported INAR with poisson inn.
 ## data generator
