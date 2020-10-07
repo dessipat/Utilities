@@ -1,5 +1,5 @@
 
-require(UReported)
+library(UReported)
 
 ##
 ## Under reported INAR with poisson inn.
