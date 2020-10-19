@@ -1,6 +1,4 @@
 
-require(UReported)
-
   ##
   ## ZIP series generator
   ##
@@ -104,7 +102,7 @@ rgenp <- function(n, lambda, theta, upp=10^8){
   ## COM-POISSON series generator
   ##
 
-require(COMPoissonReg)
+# require(COMPoissonReg)
 
 
 ##
@@ -127,19 +125,20 @@ binthin <- function(x, alpha){
 rinn <- function(par, dist){
   if(dist=="pois"){ rpois(1, par)
   }else if(dist=="zip"){ zip(n=1, par[1], par[2])
-  }else if(dist=="nb"){ nbinom(n=1, par[1], par[2])
+  }else if(dist=="nb"){ rnbinom(n=1, par[1], par[2])
   }else if(dist=="geom"){ rgeom(n=1, par)
   }else if(dist=="good"){ rgood(n=1, par[1], par[2])
   }else if(dist=="genp"){ rgenp(n=1, par[1], par[2])
-  }else if(dist=="cmp"){ rcmp(n=1, par[1], par[2])
-  }else if(dist=="herm"){ rhermite(n=1, par[1], par[2], par[3])
+  }else if(dist=="herm"){ rhermite(n=1, a=par[1], b=par[2], m=par[3])
   }
 }
 
-rip <- function(n, alpha, par, dist){
+rip <- function(n, alpha, par, dist, thin="bin", gamma = NULL){
   Y <- NULL
   Y[1] <- rinn(par, dist)
-  for (i in 2:n) Y[i] <- binthin(Y,alpha) + rinn(par, dist)
+  if(thin=="bin") for (i in 2:n) Y[i] <- binthin(Y,alpha) + rinn(par, dist)
+  if(thin=="I2") for (i in 2:n) Y[i] <- sum(rI2(n=Y[i-1], alp = alpha, gam = gamma)) + rinn(par, dist)
+  if(thin=="I3") for (i in 2:n) Y[i] <- sum(rI3(n=Y[i-1], alp = alpha, gam = gamma)) + rinn(par, dist)
   return(Y)
 }
 
@@ -160,6 +159,14 @@ resplot <- function(res){
   par(fig=c(0,1,0,1))
 }
 
+  ##
+  ## Series visualization
+  ##
+
+splot <- function(x){
+  plot(x, type = "l", ylim = c(0, max(x)+2))
+  abline(h=0, lty=2)
+}
 
 
 # Auxiliar function to estimate INAR(p) by least squares method
@@ -177,4 +184,48 @@ cls <- function(x, param){
   sum(q^2)
 }
 
+# I2 distribution random series generator
 
+pI2 <- function(x, alph, gam){
+  sapply(x, function(y)  sum(dI2(0:y, alph, gam)))
+}
+
+rI2 <- function(n, alp, gam, e=10^-5){
+  top <- ceiling(uniroot(function(x) 1-pI2(x, alp, gam)-e, lower = 1, upper = 200)$root)
+  sapply(1:n, function(y) which(pI2(0:top, alp, gam) > runif(1))[1] -1)
+}
+
+# alpha <- 0.7
+# gamma <- 0.6
+# k <- 6
+# nsim <- 10^k
+# {
+#   tm <- Sys.time()
+#   d <- rI2(nsim, alpha, gamma)
+#   tab <- table(d)
+#   Sys.time()-tm
+# }
+# data.frame(empiric =tab/nsim, real = round(dI2(as.numeric(names(tab)),alpha, gamma),k))
+
+# I3 distribution random series generator
+
+pI3 <- function(x, alph, gam){
+  sapply(x, function(y)  sum(dI3(0:y, alph, gam)))
+}
+
+rI3 <- function(n, alp, gam, e=10^-5){
+  top <- ceiling(uniroot(function(x) 1-pI3(x, alp, gam)-e, lower = 1, upper = 200)$root)
+  sapply(1:n, function(y) which(pI3(0:top, alp, gam) > runif(1))[1] -1)
+}
+
+# alpha <- 0.7
+# gamma <- 0.6
+# k <- 5
+# nsim <- 10^k
+# {
+#   tm <- Sys.time()
+#   d <- rI3(nsim, alpha, gamma)
+#   tab <- table(d)
+#   Sys.time()-tm
+# }
+# data.frame(empiric =tab/nsim, real = round(dI3(as.numeric(names(tab)),alpha, gamma),k))
