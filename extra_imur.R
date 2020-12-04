@@ -6,15 +6,21 @@ library(UReported)
 ## data generator
 ##
 
-ruri <- function(n, param){
+
+ruri <- function(n, param, ini=F){
   alpha <- param[1]
   lambda <- param[2]
   omega <- param[3]
   q <- param[4]
   if(length(param)>4) p01 <- param[5]
-
+  
   X <- Y <- I <- NULL
-  X[1] <- Y[1] <- rpois(1, lambda)
+  if(ini){
+    X[1] <- round(lambda/(1-alpha))
+    Y[1] <- round(X[1] * (1-omega*(1-q)))
+  }
+  else X[1] <- Y[1] <- rpois(1, lambda)
+ 
   if(length(param)>4){
     I[1] <- rbinom(n=1, size=1, prob=omega)
     p11 <- 1 - p01*(1-omega)/omega
